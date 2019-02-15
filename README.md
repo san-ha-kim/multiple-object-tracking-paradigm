@@ -2,6 +2,6 @@
 
 Uses Pygame
 
-Latest ver: 0.0.3
+Latest ver: 0.0.4
 
 Requires MOT_constants.py to function
