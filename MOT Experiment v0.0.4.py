@@ -4,22 +4,20 @@ import psychopy as psy
 # from random import choice
 from MOT_constants import *
 
+# == Set window ==
 x, y = 50, 50
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y)
-
 win = pg.display.set_mode((win_width, win_height))
 pg.display.set_caption(title)
 
+# == Define colors ==
 background_col = GREY
 hover_col = DARKSLATEGREY
 click_col = GREENYELLOW
 select_col = YELLOW
-#
-# # ===== Four possible states an object can be in =====
-# possible_states = ["neutral", "hovered", "clicked", "selected"]
 
+# == Processing power or frames per second ==
 FPS = 60
-total_trials = total_trials
 
 
 class MOTobj():
@@ -27,7 +25,7 @@ class MOTobj():
         # -- Radius of the circle objects
         self.radius = obj_radius
 
-        # -- Object positions and velocity attributes
+        # -- Object positions attributes
         self.x, self.y = choice([n for n in range(int(boundary["left"]), int(boundary["right"]))
                                  if n not in range(x - self.radius, x + self.radius)]), \
                          choice([n for n in range(int(boundary["up"]), int(boundary["down"]))
@@ -40,11 +38,11 @@ class MOTobj():
         self.color = default_color
         self.default_color = default_color
 
-        self.animation_state = False
-
+        # -- Timer attributes
         self.timer = 0
         self.flash = True
 
+        # -- State attributes for mouse selection control
         self.state = ""
         self.isClicked = False
         self.isSelected = False
@@ -60,19 +58,23 @@ class MOTobj():
             return False
 
     def state_control(self, state):
+        # -- Neutral or default state with no form of mouse selection
         if state == "neutral":
             self.color = self.default_color
             self.state = "neutral"
             self.isClicked = self.isSelected = False
+        # -- Hovered state if mouse is hovering over circle object
         if state == "hovered":
             self.color = hover_col
             self.state = "hovered"
             self.isClicked = self.isSelected = False
+        # -- Clicked state if mouse click DOWN while in object
         if state == "clicked":
             self.color = click_col
             self.state = "clicked"
             self.isClicked = True
             self.isSelected = False
+        # -- Selected state if mouse click UP on a "clicked" object
         if state == "selected":
             self.color = select_col
             self.state = "selected"
@@ -80,9 +82,7 @@ class MOTobj():
             self.isSelected = True
 
     def detect_collision(self, mlist):
-        # state: bool = False
-        self.animation_state = True
-        # -- Turn animation on if "state" is True
+        # -- Object positions in x and y coordinates change in velocity value
         self.x += self.dx
         self.y += self.dy
         # -- If the object reaches the window boundary, bounce back
@@ -100,9 +100,11 @@ class MOTobj():
                         brownian_motion(a, b)
 
     def draw_circle(self, display=win):
+        # -- Function to draw circle onto display
         pg.draw.circle(display, self.color, (int(self.x), int(self.y)), self.radius)
 
     def flash_color(self):
+        # -- Function to flash color
         if self.timer == (FPS/3):
             self.timer = 0
             self.flash = not self.flash
@@ -118,19 +120,23 @@ class MOTobj():
 
 
 def msg_to_screen(message_text, color):
+    """function to draw message onto window"""
     msg = pg.font.SysFont("arial", 24)
     msg.render(message_text, True, color)
 
 
 def delay(t):
+    """function to stop all processes for a time"""
     pg.time.delay(t)
 
 
 def wait_keypress(key, tstamp):
+    """function to STOP ALL PROCESSES until some key is pressed"""
     psy.event.waitKeys(maxWait=float('inf'), keyList=[key], timeStamped=tstamp)
 
 
 def flash_targets(distractor_list, target_list):
+    """function to flash targets"""
     pg.time.Clock().tick(FPS)
     for d in distractor_list:
         for t in target_list:
@@ -141,6 +147,7 @@ def flash_targets(distractor_list, target_list):
 
 
 def animate(distractor_list, target_list, master_list):
+    """function to move or animate objects on screen"""
     for d in distractor_list:
         for t in target_list:
             d.detect_collision(master_list)
@@ -151,17 +158,20 @@ def animate(distractor_list, target_list, master_list):
 
 
 def answer_time(master_list):
+    """function for answer submission control"""
     for obj in master_list:
         obj.draw_circle()
     pg.display.update()
 
 
 def reset_color(master_list):
+    """function to reset state"""
     for obj in master_list:
         obj.change_color(obj.default_color)
 
 
 def generate_list(dist_list, targ_list):
+    """function to generate new list"""
     for nd in range(num_distractor):
         d = MOTobj()
         dist_list.append(d)
@@ -177,12 +187,14 @@ def reset():
 
 
 def main():
+    """trial loop"""
     # - Generate a list of lists of objects
     list_dstr = []
     list_targ = []
     generate_list(list_dstr, list_targ)
     list_master = list_dstr + list_targ
 
+    # - state control
     done = False
 
     pg.init()  # -- Initiate pygame module
@@ -205,7 +217,7 @@ def main():
             if (event.type == pg.KEYDOWN) and (event.key == pg.K_ESCAPE):
                 done = True  # press escape key to quit
 
-            # -- Set the mouse control for master list
+            # -- Set the mouse control for ALL OBJECTS
             for obj in list_master:
                 if obj.in_circle(mx, my):
                     if event.type == pg.MOUSEMOTION:
@@ -233,6 +245,7 @@ def main():
                             obj.state_control("neutral")
 
                 if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
+                    # -- Answer submission function
                     print("Spacebar has been pressed")
                     reset = 1
                     obj.state_control("neutral")
@@ -258,7 +271,7 @@ def main():
                     reset = 0
 
         else:
-            # show end screen
+            # --- show end screen
             print("trials over")
 
     pg.quit()
