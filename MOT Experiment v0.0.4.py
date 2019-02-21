@@ -1,13 +1,17 @@
 import pygame as pg
 import sys, math, os, time
 import psychopy as psy
-# from random import choice
+import random
 from MOT_constants import *
+
+# == Trial variables ==
+real_trials = 2
+practice_trials = 1
 
 # == Set window ==
 x, y = 50, 50
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y)
-win = pg.display.set_mode((win_width, win_height))
+win = pg.display.set_mode((win_width, win_height)) #, pg.FULLSCREEN)
 pg.display.set_caption(title)
 
 # == Define colors ==
@@ -105,11 +109,11 @@ class MOTobj():
 
     def flash_color(self):
         # -- Function to flash color
-        if self.timer == (FPS/3):
+        if self.timer == (FPS):
             self.timer = 0
             self.flash = not self.flash
 
-        self.timer += 1
+        self.timer += 4
 
         if self.flash:
             self.color = background_col
@@ -118,48 +122,73 @@ class MOTobj():
 
         # print(self.timer)
 
+    def shuffle_position(self):
+        """Shuffle the position of circles"""
+        self.x = choice([n for n in range(int(boundary["left"]), int(boundary["right"]))
+                         if n not in range(x - self.radius, x + self.radius)])
+        self.y = choice([n for n in range(int(boundary["up"]), int(boundary["down"]))
+                         if n not in range(y - self.radius, y + self.radius)])
 
-def msg_to_screen(message_text, color):
-    """function to draw message onto window"""
-    msg = pg.font.SysFont("arial", 24)
-    msg.render(message_text, True, color)
+
+def text_objects(text, color):
+    """text object defining text"""
+    msg = pg.font.SysFont("arial", fontsize)
+    text_surf = msg.render(text, True, color)
+    return text_surf, text_surf.get_rect()
+
+
+def msg_to_screen(text, textcolor):
+    """function to render message to screen centered"""
+    text_surface, text_rect = text_objects(text, textcolor)
+    text_rect.center = (win_w/2), (win_h/2)
+    win.blit(text_surface, text_rect)
 
 
 def delay(t):
     """function to stop all processes for a time"""
-    pg.time.delay(t)
+    pg.time.delay(t*1000)  # multiply by a thousand because the delay function takes milliseconds
 
 
-def wait_keypress(key, tstamp):
-    """function to STOP ALL PROCESSES until some key is pressed"""
-    psy.event.waitKeys(maxWait=float('inf'), keyList=[key], timeStamped=tstamp)
+def generate_list():
+    """function to generate new list of objects"""
+    distractor_list = []
+    for nd in range(num_distractor):
+        d = MOTobj()
+        distractor_list.append(d)
+
+    target_list = []
+    for nt in range(num_targ):
+        t = MOTobj(DARKKHAKI)
+        target_list.append(t)
+
+    return distractor_list, target_list
 
 
-def flash_targets(distractor_list, target_list):
+def flash_targets(dlist, tlist):
     """function to flash targets"""
     pg.time.Clock().tick(FPS)
-    for d in distractor_list:
-        for t in target_list:
+    for d in dlist:
+        for t in tlist:
             d.draw_circle(win)
             t.flash_color()
             t.draw_circle(win)
     pg.display.update()
 
 
-def animate(distractor_list, target_list, master_list):
+def animate(dlist, tlist, mlist):
     """function to move or animate objects on screen"""
-    for d in distractor_list:
-        for t in target_list:
-            d.detect_collision(master_list)
-            t.detect_collision(master_list)
+    for d in dlist:
+        for t in tlist:
+            d.detect_collision(mlist)
+            t.detect_collision(mlist)
             d.draw_circle(win)
             t.draw_circle(win)
     pg.display.update()
 
 
-def answer_time(master_list):
+def answer_time(mlist):
     """function for answer submission control"""
-    for obj in master_list:
+    for obj in mlist:
         obj.draw_circle()
     pg.display.update()
 
@@ -170,48 +199,61 @@ def reset_color(master_list):
         obj.change_color(obj.default_color)
 
 
-def generate_list(dist_list, targ_list):
-    """function to generate new list"""
-    for nd in range(num_distractor):
-        d = MOTobj()
-        dist_list.append(d)
-
-    for nt in range(num_targ):
-        t = MOTobj(DARKKHAKI)
-        targ_list.append(t)
+def fixation_cross():
+    start_x, end_x = ((win_width/2)-5, win_height/2) , ((win_width/2)+5, win_height/2)
+    start_y, end_y = (win_width/2, (win_height/2)-5), (win_width/2, (win_height/2)+5)
+    pg.draw.line(win, WHITE, start_x, end_x)
+    pg.draw.line(win, WHITE, start_y, end_y)
+    pg.display.flip()
 
 
-def reset():
-    # == Reset the loop, or trial ==
-    pass
+def wait_keypress(key, tstamp):
+    """function to STOP ALL PROCESSES until some key is pressed"""
+    psy.event.waitKeys(maxWait=float('inf'), keyList=[key], timeStamped=tstamp)
 
 
 def main():
     """trial loop"""
-    # - Generate a list of lists of objects
-    list_dstr = []
-    list_targ = []
-    generate_list(list_dstr, list_targ)
-    list_master = list_dstr + list_targ
-
-    # - state control
+    total_trials = real_trials
+    completed_trials = 0
+    reset = 0
     done = False
 
+    # - Generate a list of lists of objects
+    distractor_list, target_list = generate_list()
+    list_master = target_list + distractor_list
+
     pg.init()  # -- Initiate pygame module
-    # t0 = time.time()
     t0 = pg.time.get_ticks()
-    reset = 0
 
     # ===== Main loop =====
     while not done:
-        pg.time.Clock().tick(FPS)
-
+        pg.time.Clock().tick(FPS)  # =Set FPS
         win.fill(background_col)  # =fill background with background color
-
         mx, my = pg.mouse.get_pos()  # =get x and y coord of mouse cursor on window
+        # == Timer ==
+        t1 = pg.time.get_ticks()  # pygame version for timer
+        dt = (t1 - t0) / 1000
 
-        # -- Quit control
+        # == Trial loops ==
+        # if completed_trials <= total_trials:
+        if dt <= Tf:
+            flash_targets(distractor_list, target_list)
+        elif Tf < dt <= Ta:
+            animate(distractor_list, target_list, list_master)
+        else:
+            answer_time(list_master)
+            if reset == 1:
+                t0 = t1
+                reset = 0
+                completed_trials += 1
+        # else:
+        #     print("trial loop over")
+        #     done = True
+
+        # == Event controller
         for event in pg.event.get():
+            # -- Quit control
             if event.type == pg.QUIT:
                 done = True  # close window to quit
             if (event.type == pg.KEYDOWN) and (event.key == pg.K_ESCAPE):
@@ -235,7 +277,8 @@ def main():
                     if event.type == pg.MOUSEBUTTONUP:
                         if obj.isClicked and not obj.isSelected:
                             obj.state_control("selected")
-                            print("Mouse released; ""Clicked state: ", obj.isClicked, "Selected state: ", obj.isSelected)
+                            print("Mouse released; ""Clicked state: ", obj.isClicked, "Selected state: ",
+                                  obj.isSelected)
                 elif not obj.in_circle(mx, my):
                     if event.type == pg.MOUSEMOTION:
                         if not obj.isClicked and not obj.isSelected:
@@ -249,33 +292,10 @@ def main():
                     print("Spacebar has been pressed")
                     reset = 1
                     obj.state_control("neutral")
-
-        # == Timer ==
-        # t1 = time.time()
-        # dt = t1-t0
-        t1 = pg.time.get_ticks()  # pygame version for timer
-        dt = (t1-t0)/1000
-        # print("{:2.2f}".format(dt))
-        ntrial = 0
-        # == Trial loops ==
-        if ntrial <= 2:
-            if dt <= Tf:
-                flash_targets(list_dstr, list_targ)
-            elif Tf < dt <= Ta:
-                animate(list_dstr, list_targ, list_master)
-            else:
-                answer_time(list_master)
-                if reset == 1:
-                    t0 = t1
-                    ntrial += 1
-                    reset = 0
-
-        else:
-            # --- show end screen
-            print("trials over")
-
-    pg.quit()
-    sys.exit()
+                    obj.shuffle_position()
+                    if obj.isClicked and obj.isSelected:
+                        # == Answer comparison
+                        pass
 
 
 if __name__ == "__main__":
