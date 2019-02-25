@@ -1,9 +1,7 @@
 # multiple-object-tracking-paradigm
 
-Uses Pygame
+This is the multiple object tracking paradigm, as first described by Pylyshyn and Storm (1988). In this very experiment, the objects follow a Brownian motion and expected to indicate all the objects they have been tracking instead of selecting if one object has been tracked or not.
 
-Latest ver: 0.0.4
+Dependencies: PyGame, PsychoPy
 
-Requires MOT_constants.py to function
-
-Run MOT Experiment*.py 
+Run the main experiment file; requires MOT_constants.py file
