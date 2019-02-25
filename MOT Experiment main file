@@ -1,13 +1,11 @@
 import pygame as pg
-import sys, math, os, time
-import psychopy as psy
-from psychopy import *
-import random
+import sys, os, csv
 from MOT_constants import *
+from psychopy.gui import DlgFromDict
 
 # == Trial variables ==
-real_trials = 2
-practice_trials = 1
+n_real = 2
+n_prac = 1
 
 # == Set window ==
 x, y = 50, 50
@@ -24,8 +22,23 @@ select_col = YELLOW
 # == Processing power or frames per second ==
 FPS = 60
 
-# == Font size ==
-large_font = 54
+dlg_box = DlgFromDict(session_info, title="Multiple Object Tracking", fixed=["date"])
+info_entered = False
+if dlg_box.OK:
+    print(session_info)
+    info_entered = True
+else:
+    print("User has cancelled")
+    pg.quit()
+    sys.exit()
+
+# == Prepare a CSV file ==
+mot_log = date_string + ' pcpnt_' + session_info['Participant'] + '_obsvr_'+session_info['Observer']
+log = open(mot_log + '.csv', 'w')
+header = ["response_time", "response_score"]
+delim = ",".join(header)
+delim += "\n"
+log.write(delim)
 
 
 class MOTobj():
@@ -118,13 +131,12 @@ class MOTobj():
             self.flash = not self.flash
 
         self.timer += 3
-        # print(self.timer)
+        # print("Timer: {:d}".format(self.timer))
+
         if self.flash:
             self.color = self.default_color
         else:
             self.color = background_col
-
-
 
     def shuffle_position(self):
         """Shuffle the position of circles"""
@@ -146,7 +158,14 @@ def msg_to_screen(text, textcolor, textsize, display=win):
     text_surface, text_rect = text_objects(text, textcolor, textsize)
     text_rect.center = (win_width/2), (win_height/2)
     display.blit(text_surface, text_rect)
-    pg.display.update()
+
+
+def message_screen(message):
+    if message == "4":
+        msg_to_screen("Select 4 circles!", BLACK, med_font)
+    if message == "NR":
+        msg_to_screen("Time's up! Now resetting", BLACK, large_font)
+        pg.display.flip()
 
 
 def delay(t):
@@ -195,7 +214,6 @@ def static_draw(mlist):
     """function for static object draw"""
     for obj in mlist:
         obj.draw_circle()
-    pg.display.update()
 
 
 def fixation_cross(color):
@@ -214,111 +232,189 @@ def fixation_screen(mlist):
     pg.display.update()
 
 
+def finished_experiment_screen():
+    win.fill(GREY)
+    msg_to_screen("Experiment complete", BLACK, large_font)
+    pg.display.flip()
+
+
+def record_response(response_time, response_score):
+    # record the responses
+    header_list = [response_time, response_score]
+    # convert to string
+    header_str = map(str, header_list)
+
+    # convert to a single line, separated by tabs
+    header_line = ','.join(header_str)
+    header_line += '\n'
+    log.write(header_line)
+
+
 def main():
     """trial loop"""
-    total_trials = real_trials
-    completed_trials = 0
-    reset = 0
-    done = False
+    if info_entered is True:  # if the participant information has been entered, run the trial
 
-    # - Generate a list of lists of objects
-    distractor_list, target_list = generate_list()
-    list_master = target_list + distractor_list
+        # == Number of trials ==
+        total_trials = 2  # real_trials
+        completed_trials = 0
 
-    pg.init()  # -- Initiate pygame module
-    t0 = pg.time.get_ticks()
+        reset = 0  # - reset loop control
+        timeup = 0  # - variable control when subject doesn't answer
+        submitted = 0  # - variable control for answer submission
+        select4 = 0  # - variable control when less or more than 4 objects are selected
 
-    # ===== Main loop =====
-    while not done:
-        pg.time.Clock().tick(FPS)  # =Set FPS
-        win.fill(background_col)  # =fill background with background color
-        mx, my = pg.mouse.get_pos()  # =get x and y coord of mouse cursor on window
+        practice_trials = True
+        real_trial = False
 
-        selected_list = []
-        # == Timer ==
-        t1 = pg.time.get_ticks()  # pygame version for timer
-        dt = (t1 - t0) / 1000
+        done = False
 
-        # == Event controller
-        for event in pg.event.get():
+        # - Generate a list of lists of objects
+        distractor_list, target_list = generate_list()
+        list_master = target_list + distractor_list
 
-            # -- Quit control
-            if event.type == pg.QUIT:
-                done = True  # close window to quit
-            if (event.type == pg.KEYDOWN) and (event.key == pg.K_ESCAPE):
-                done = True  # press escape key to quit
+        pg.init()  # -- Initiate pygame module
+        t0 = pg.time.get_ticks()
 
-            # -- Set the mouse control for ALL OBJECTS
-            for obj in list_master:
-                if obj.in_circle(mx, my):
-                    if event.type == pg.MOUSEMOTION:
-                        if not obj.isClicked and not obj.isSelected:
-                            obj.state_control("hovered")
-                            # print("Clicked state: ", obj.isClicked, "Selected state: ", obj.isSelected)
-                    if event.type == pg.MOUSEBUTTONDOWN:
-                        if not obj.isClicked and not obj.isSelected:
-                            obj.state_control("clicked")
-                            print("Click down; ", "Clicked state: ", obj.isClicked, "Selected state: ", obj.isSelected)
+        # ===== Main loop =====
+        while not done:
+            pg.time.Clock().tick(FPS)  # =Set FPS
+            win.fill(background_col)  # =fill background with background color
+            mx, my = pg.mouse.get_pos()  # =get x and y coord of mouse cursor on window
 
-                        if not obj.isClicked and obj.isSelected:
-                            obj.state_control("neutral")
-                            print("Click down; ", "Clicked state: ", obj.isClicked, "Selected state: ", obj.isSelected)
-                    if event.type == pg.MOUSEBUTTONUP:
-                        if obj.isClicked and not obj.isSelected:
-                            obj.state_control("selected")
-                            print("Mouse released; ""Clicked state: ", obj.isClicked, "Selected state: ",
-                                  obj.isSelected)
-                elif not obj.in_circle(mx, my):
-                    if event.type == pg.MOUSEMOTION:
-                        if not obj.isClicked and not obj.isSelected:
-                            obj.state_control("neutral")
-                    if event.type == pg.MOUSEBUTTONUP:
-                        if obj.isClicked and not obj.isSelected:
-                            obj.state_control("neutral")
-                            # -- Answer control
-                if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                    if reset == 0:
+            selected_list = []  # - list for all selected objects
+            selected_targ = []  # - list for all SELECTED TARGETS
+
+            # == Timer ==
+            t1 = pg.time.get_ticks()  # pygame version for timer
+            dt = (t1 - t0) / 1000  # total time elapsed
+
+            # == Event controller ==
+            for event in pg.event.get():
+
+                # -- Quit control --
+                if event.type == pg.QUIT:
+                    done = True  # close window to quit
+                if (event.type == pg.KEYDOWN) and (event.key == pg.K_ESCAPE):
+                    done = True  # press escape key to quit
+
+                # -- Answer submission control --
+                if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:  # if spacebar is pressed
+                    if reset == 0:  # and if the reset condition is met
+                        t2 = pg.time.get_ticks()  # -- time when spacebar is pressed
+                        Tsub = (t2-t0)/1000
+                        # - Concern with the distractor and target objects separately
                         for target in target_list:
                             if target.isSelected and not target.isClicked:
                                 selected_list.append(target)
-                    elif reset == 1:
+                                selected_targ.append(target)
+                        for distractor in distractor_list:
+                            if distractor.isSelected and not distractor.isClicked:
+                                selected_list.append(distractor)
+
+                        if len(selected_list) == num_targ:  # - if the subject successfully selected only 4 objects
+                            submitted = 1  # - move on with the trial process
+                        else:
+                            select4 = 1  # - otherwise remind them
+
+                # -- Set the mouse control for ALL OBJECTS --
+                for obj in list_master:
+                    if obj.in_circle(mx, my):
+                        if event.type == pg.MOUSEMOTION:
+                            if not obj.isClicked and not obj.isSelected:
+                                obj.state_control("hovered")
+                                # print("Clicked state: ", obj.isClicked, "Selected state: ", obj.isSelected)
+                        if event.type == pg.MOUSEBUTTONDOWN:
+                            if not obj.isClicked and not obj.isSelected:
+                                obj.state_control("clicked")
+                                # print("Click down; ", "Clicked state: ", obj.isClicked, "Selected state: ", obj.isSelected)
+
+                            if not obj.isClicked and obj.isSelected:
+                                obj.state_control("neutral")
+                                # print("Click down; ", "Clicked state: ", obj.isClicked, "Selected state: ", obj.isSelected)
+                        if event.type == pg.MOUSEBUTTONUP:
+                            if obj.isClicked and not obj.isSelected:
+                                obj.state_control("selected")
+                                # print("Mouse released; ""Clicked state: ", obj.isClicked, "Selected state: ", obj.isSelected)
+
+                    elif not obj.in_circle(mx, my):
+                        if event.type == pg.MOUSEMOTION:
+                            if not obj.isClicked and not obj.isSelected:
+                                obj.state_control("neutral")
+                        if event.type == pg.MOUSEBUTTONUP:
+                            if obj.isClicked and not obj.isSelected:
+                                obj.state_control("neutral")
+
+                    # -- Reset control --
+                    # if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
+                    #     if reset == 1:
+                    #         obj.shuffle_position()
+                    #         obj.state_control("neutral")
+                    #         t0 = t1
+                    #         reset = 0
+
+            # == Trial loops ==
+            if completed_trials <= total_trials:
+                if reset == 0:
+                    # print("Time elapsed: {:2.2f} seconds".format(dt))
+                    if dt <= Tfix:
+                        fixation_screen(list_master)
+                    elif Tfix < dt <= Tfl:
+                        fixation_cross(BLACK)
+                        flash_targets(distractor_list, target_list)
+                    elif Tfl < dt <= Tani:
+                        for targ in target_list:
+                            targ.state_control("neutral")
+                        fixation_cross(BLACK)
+                        animate(distractor_list, target_list, list_master)
+                    elif Tani < dt <= Tans:
+                        if select4 == 1:
+                            message_screen("4")
+                        static_draw(list_master)
+                        pg.display.flip()
+                    elif Tans <= dt:
+                        timeup = 1
+
+                if submitted == 1:
+                    win.fill(GREY)
+                    print("Correct number: {:d}".format(len(selected_targ)))
+                    print("Selected object count: {:d}".format(len(selected_list)))
+
+                    msg_to_screen("{:d} out of {:d} correct".format(len(selected_targ), len(selected_list)), BLACK, large_font)
+                    pg.display.flip()
+
+                    print("Submission loop RT: {:2.3f}".format(Tsub))
+
+                    delay(1)
+
+                    reset = 1
+                    submitted = 0
+
+                if timeup == 1:
+                    message_screen("NR")
+                    delay(1)
+                    reset = 1
+
+                if reset == 1:
+                    # delay(2)
+                    for obj in list_master:
                         obj.shuffle_position()
                         obj.state_control("neutral")
-                        print(selected_list)
-                        t0 = t1
-                        reset = 0
+                    record_response(Tsub, len(selected_targ))
+                    print("reset shuffle passed", completed_trials)
+                    print("Reset loop RT: {:2.3f}".format(Tsub))
+                    completed_trials += 1
+                    select4 = 0
+                    reset = 0
+                    Tsub = t1
+                    t0 = t1
+            else:
+                finished_experiment_screen()
+                delay(2)
+                print("trial complete")
+                done = True
 
-        # == Trial loops ==
-        if reset == 0:
-            # print("Time elapsed: {:2.2f} seconds".format(dt))
-            if dt <= Tfix:
-                fixation_screen(list_master)
-            elif Tfix < dt <= Tfl:
-                fixation_cross(BLACK)
-                flash_targets(distractor_list, target_list)
-            elif Tfl < dt <= Tani:
-                for targ in target_list:
-                    targ.state_control("neutral")
-                fixation_cross(BLACK)
-                animate(distractor_list, target_list, list_master)
-            elif Tani < dt <= Tans:
-                static_draw(list_master)
-            elif Tans <= dt:
-                reset = 1
-
-        elif reset == 1:
-            msg_to_screen("Time's up! Now resetting", BLACK, large_font)
-            delay(1)
-            print("delay passed")
-            for obj in list_master:
-                obj.shuffle_position()
-                obj.state_control("neutral")
-            print("reset shuffle passed")
-            reset = 0
-            t0 = t1
-
-    pg.quit()
-    sys.exit()
+        pg.quit()
+        sys.exit()
 
 
 if __name__ == "__main__":
