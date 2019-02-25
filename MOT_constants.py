@@ -23,7 +23,7 @@ answer_time = Tans = animation_time + 10  # time limit to make answer
 Define the project display window
 """
 title = "Multiple Object Tracking Experiment"
-win_width, win_height = 800, 600  # pixels; width of screen
+win_width, win_height = 1920, 1080  # pixels; width of screen
 win_dimension = (win_width, win_height)
 
 """
