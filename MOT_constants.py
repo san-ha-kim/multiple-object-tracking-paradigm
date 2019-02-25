@@ -1,36 +1,40 @@
 import math
 from random import randint, choice
+import time
+
 
 """
-Define number of trials
+Define the object class attributes
 """
-completed_trials = 0  # how many trials have been completed
-total_trials = 50  # how many trials in total
-trial_is_running: bool = False
+obj_radius: int = 20  # size of balls in pixels
+num_distractor = 6  # number of distractor objects
+num_targ = 4  # number of target objects
 
 """
-Define the times and durations in MILLISECONDS
+Define the times and durations in SECONDS
 """
-flash_time = flashT = 1000  # time for targets to flash
-blink_time = 125
-targ_pres_time = 250
-targ_hold_time = 200
-
-animation_time = aniT = flash_time + 8000 # time for objects to move around in seconds
-answer_time = 3000
+# fix_time = Tfix = 1  # time to present fixation cross
+fix_draw_time = Tfix = 1.5 # time to present fixation cross and objects
+flash_time = Tfl = fix_draw_time + 1  # time for targets to flash
+animation_time = Tani = flash_time + 1 # time for objects to move around in seconds
+answer_time = Tans = animation_time + 10  # time limit to make answer
 
 """
 Define the project display window
 """
 title = "Multiple Object Tracking Experiment"
-win_width = 1200  # pixels; width of screen
-win_height = 675
+win_width, win_height = 800, 600  # pixels; width of screen
 win_dimension = (win_width, win_height)
 
 """
 Define instruction texts
 """
 submit_ans_txt = "Press space to submit answer"
+
+# == Font size ==
+large_font = 54
+med_font = 24
+small_font = 12
 
 """
 Define some colours
@@ -54,28 +58,23 @@ GREENYELLOW = [173, 255, 47]
 RED = [220, 20, 60]
 
 """
-Define the floating object class attributes
-"""
-obj_radius: int = 20  # size of balls in pixels
-obj_diam: int = obj_radius*2
-
-num_distractor = 6  # number of distractor objects
-num_targ = 4  # number of target objects
-
-"""
 Generate random x and y coordinates within the window boundary
 """
 boundary_location = ['up', 'down', 'left', 'right']
-boundary_coord = [obj_radius, (win_height - obj_radius), obj_radius, (win_width - obj_radius)]
+boundary_coord = [obj_radius, (win_height - obj_radius + 1), obj_radius, (win_width - obj_radius + 1)]
 boundary = dict(zip(boundary_location, boundary_coord))
 
-range(int(boundary["left"]), int(boundary["right"]))
+x_range, y_range = range(int(boundary["left"]), int(boundary["right"])), range(int(boundary["up"]), int(boundary["down"]))
 
-x = randint(boundary["left"], boundary["right"])
-y = randint(boundary["up"], boundary["down"])
+# print(randint(x_range))
 
 min_spd, max_spd = -2, 2
-limit_horiz, limit_vert = randint(boundary["left"], boundary["right"]), randint(boundary["up"], boundary["down"])
+
+"""
+Define session information for recording purposes
+"""
+session_info = {'Observer': 'Type observer initials', 'Participant': 'Type participant ID'}
+date_string = time.strftime("%b_%d_%H%M", time.localtime())  # add the current time
 
 
 def brownian_motion(C1, C2):
