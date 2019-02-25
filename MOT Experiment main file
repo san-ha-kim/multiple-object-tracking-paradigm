@@ -10,7 +10,7 @@ n_prac = 1
 # == Set window ==
 x, y = 50, 50
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y)
-win = pg.display.set_mode((win_width, win_height)) #, pg.FULLSCREEN)
+win = pg.display.set_mode((win_width, win_height), pg.FULLSCREEN)
 pg.display.set_caption(title)
 
 # == Define colors ==
@@ -173,7 +173,7 @@ def delay(t):
     pg.time.delay(t*1000)  # multiply by a thousand because the delay function takes milliseconds
 
 
-def generate_list():
+def generate_list(color):
     """function to generate new list of objects"""
     distractor_list = []
     for nd in range(num_distractor):
@@ -182,7 +182,7 @@ def generate_list():
 
     target_list = []
     for nt in range(num_targ):
-        t = MOTobj(DARKKHAKI)
+        t = MOTobj(color)
         target_list.append(t)
 
     return distractor_list, target_list
@@ -269,7 +269,7 @@ def main():
         done = False
 
         # - Generate a list of lists of objects
-        distractor_list, target_list = generate_list()
+        distractor_list, target_list = generate_list(DARKKHAKI)
         list_master = target_list + distractor_list
 
         pg.init()  # -- Initiate pygame module
