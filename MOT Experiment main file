@@ -4,7 +4,7 @@ from MOT_constants import *
 from psychopy.gui import DlgFromDict
 
 # == Trial variables ==
-n_real = 2
+n_real = 50
 n_prac = 1
 
 # == Set window ==
@@ -353,7 +353,7 @@ def main():
                     #         reset = 0
 
             # == Trial loops ==
-            if completed_trials <= total_trials:
+            if completed_trials < total_trials:
                 if reset == 0:
                     # print("Time elapsed: {:2.2f} seconds".format(dt))
                     if dt <= Tfix:
