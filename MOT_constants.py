@@ -17,13 +17,14 @@ Define the times and durations in SECONDS
 fix_draw_time = Tfix = 1.5 # time to present fixation cross and objects
 flash_time = Tfl = fix_draw_time + 1  # time for targets to flash
 animation_time = Tani = flash_time + 1 # time for objects to move around in seconds
-answer_time = Tans = animation_time + 10  # time limit to make answer
+answer_time = Tans = animation_time + 5  # time limit to make answer
 
+feedback_time = 1
 """
 Define the project display window
 """
 title = "Multiple Object Tracking Experiment"
-win_width, win_height = 1920, 1080  # pixels; width of screen
+win_width, win_height = 800, 600  # pixels; width of screen
 win_dimension = (win_width, win_height)
 
 """
