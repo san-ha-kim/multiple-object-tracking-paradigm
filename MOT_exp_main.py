@@ -4,13 +4,13 @@ from MOT_constants import *
 from psychopy.gui import DlgFromDict
 
 # == Trial variables ==
-n_real = 50
-n_prac = 10
+n_real = 2
+n_prac = 1
 
 # == Set window ==
 x, y = 50, 50
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y)
-win = pg.display.set_mode((win_width, win_height))  #, pg.FULLSCREEN)
+win = pg.display.set_mode((win_width, win_height), pg.FULLSCREEN)
 pg.display.set_caption(title)
 
 # == Define colors ==
@@ -21,7 +21,6 @@ select_col = YELLOW
 
 # == Processing power or frames per second ==
 FPS = 60
-
 
 
 class MOTobj():
