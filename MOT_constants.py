@@ -45,7 +45,8 @@ welcome_text = "Welcome! Firstly, you are welcome to stop at any time; just let 
                "focus your gaze to that cross.\n\nIn this experiment, there will be {:d} moving circles in each trial. " \
                "Please track {:d} objects indicated by flickering GREEN at the start.\nWhen motion stops, indicate " \
                "these {:d} objects you have been tracking by clicking on them. Then press the SPACE bar to submit " \
-               "your result.\n\nPress F when you are ready to practice.".format((int(num_targ+num_distractor)),
+               "your result. Try to be as quick and accurate as your can.\n\nPress F when you " \
+               "are ready to practice.".format((int(num_targ+num_distractor)),
                                                                              num_targ, num_targ)
 
 fix_text = "First, you will see this cross. Please focus onto the cross and fix your gaze to where the cross is. \n\n" \
