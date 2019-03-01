@@ -6,4 +6,4 @@ Change n_prac and n_real variables in the main file to change how many practice 
 
 Dependencies: PyGame, PsychoPy
 
-Run the main experiment file; requires MOT_constants.py file
+To run the MOT experiment, download and run the main experiment file; requires MOT_constants.py to run. The GUIDED experiment file includes a step-by-step guide.
