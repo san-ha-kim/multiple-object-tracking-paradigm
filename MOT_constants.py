@@ -61,7 +61,7 @@ submit_ans_txt = "When the balls stop moving, select the balls that you've been 
 
 prac_finished_txt = "The practice is now over.\n\nPress the F when you are ready to continue to the real " \
                     "experiment.\nKeep track of the {:d} targets and submit your result by pressing the SPACE bar. " \
-                    "\n\nRemember to be as quick and accurate as you can!\n\nPress F to continue.".format(num_targ)
+                    "\n\nRemember to be as quick and accurate as you can!".format(num_targ)
 
 experim_fin_txt = "The experiment is now over; let the experimenter know.\n\nThank you for participating!" \
                   "\n\nPress F to exit."
