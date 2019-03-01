@@ -6,8 +6,8 @@ import time
 """
 Define the object class attributes
 """
-obj_radius: int = 30  # size of balls in pixels
-num_distractor = 6  # number of distractor objects
+obj_radius: int = 35  # size of balls in pixels
+num_distractor = 4  # number of distractor objects
 num_targ = 4  # number of target objects
 
 """
@@ -17,7 +17,7 @@ fix_draw_time = Tfix = 1.5 # time to present fixation cross and objects
 
 flash_time = Tfl = fix_draw_time + 1  # time for targets to flash
 
-animation_time = Tani = flash_time + 8  # time for objects to move around in seconds
+animation_time = Tani = flash_time + 6  # time for objects to move around in seconds
 
 answer_time = Tans = animation_time + 60  # time limit to make answer
 
@@ -26,21 +26,19 @@ feedback_time = 1
 Define the project display window
 """
 title = "Multiple Object Tracking Experiment"
-win_width, win_height = 1600, 900  # pixels; width of screen
+win_width, win_height = 1920, 1080  # pixels; width of screen
 win_dimension = (win_width, win_height)
 
 """
 Define instruction texts
 """
-welcome_text = "Welcome! Thank you for participating in this experiment. You can stop at any time; " \
-               "just let the experimentor know!\n\nIn this experiment, you'll first see a cross at the center " \
-               "of the screen. Please focus your gaze to that cross at all times. \nThen, {:d} balls will appear " \
-               "around the screen, and some balls will start blinking. Pay attention to which balls have blinked. " \
-               "All balls will start moving, and you need to keep track of the blinked balls. \nWhen the balls " \
-               "stop moving, select which balls you think have blinked earlier. \nAfter you've selected {:d} balls, " \
-               "press the space bar to submit your selection.\n\nThere is a lot of information here, so next, " \
-               "there will be a step-by-step guide of what to do.\n\n" \
-               "Press F to progress.".format((num_targ+num_distractor), num_targ)
+welcome_text = "Welcome! Firstly, you are welcome to stop at any time; just let the experimenter know!\n" \
+               "In this experiment, you'll first see a cross at the center of the screen. Please always " \
+               "focus your gaze to that cross.\n\nIn this experiment, there will be {:d} moving circles in each trial. " \
+               "Please track {:d} objects indicated by flickering GREEN at the start.\nWhen motion stops, indicate " \
+               "these {:d} objects you have been tracking by clicking on them. Then press the SPACE bar to submit " \
+               "your result.\n\nPress F when you are ready to practice.".format((int(num_targ+num_distractor)),
+                                                                             num_targ, num_targ)
 
 fix_text = "First, you will see this cross. Please focus onto the cross and fix your gaze to where the cross is. \n\n" \
            "Press F to continue."
@@ -51,6 +49,12 @@ present_text = "Then, {:d} balls will appear randomly. Please focus your gaze to
 
 submit_ans_txt = "When the balls stop moving, select the balls that you've been tracking.\nYou will have {:d} seconds " \
                  "to make your choice.\n\nPress space to submit your answer.".format(int(answer_time-animation_time))
+
+prac_finished_txt = "The practice is now over.\n\nPress the F when you are ready to continue to the real " \
+                    "experiment.\nKeep track of the {:d} targets and submit your result by pressing the SPACE bar. " \
+                    "\n\nRemember to be as quick and accurate as you can!".format(num_targ)
+
+experim_fin_txt = "The experiment is now over; let the experimenter know.\n\nThank you for participating!"
 
 # == Font size ==
 large_font = 72
