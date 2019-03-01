@@ -32,6 +32,14 @@ win_dimension = (win_width, win_height)
 """
 Define instruction texts
 """
+guide_welcome_txt = "Welcome! Firstly, you are welcome to stop at any time; just let the experimenter know!\n" \
+               "In this experiment, you'll first see a cross at the center of the screen. Please always " \
+               "focus your gaze to that cross.\n\nIn this experiment, there will be {:d} moving circles in each trial. " \
+               "Please track {:d} objects indicated by flickering GREEN at the start.\nWhen motion stops, indicate " \
+               "these {:d} objects you have been tracking by clicking on them. Then press the SPACE bar to submit " \
+               "your result.\n\nPress F to move to the guide.".format((int(num_targ+num_distractor)),
+                                                                             num_targ, num_targ)
+
 welcome_text = "Welcome! Firstly, you are welcome to stop at any time; just let the experimenter know!\n" \
                "In this experiment, you'll first see a cross at the center of the screen. Please always " \
                "focus your gaze to that cross.\n\nIn this experiment, there will be {:d} moving circles in each trial. " \
@@ -52,9 +60,10 @@ submit_ans_txt = "When the balls stop moving, select the balls that you've been 
 
 prac_finished_txt = "The practice is now over.\n\nPress the F when you are ready to continue to the real " \
                     "experiment.\nKeep track of the {:d} targets and submit your result by pressing the SPACE bar. " \
-                    "\n\nRemember to be as quick and accurate as you can!".format(num_targ)
+                    "\n\nRemember to be as quick and accurate as you can!\n\nPress F to continue.".format(num_targ)
 
-experim_fin_txt = "The experiment is now over; let the experimenter know.\n\nThank you for participating!"
+experim_fin_txt = "The experiment is now over; let the experimenter know.\n\nThank you for participating!" \
+                  "\n\nPress F to exit."
 
 # == Font size ==
 large_font = 72
