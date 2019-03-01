@@ -4,8 +4,8 @@ from MOT_constants import *
 from psychopy.gui import DlgFromDict
 
 # == Trial variables ==
-n_real = 2
-n_prac = 1
+n_real = 50
+n_prac = 5
 
 # == Set window ==
 x, y = 50, 50
@@ -118,7 +118,7 @@ class MOTobj():
         if self.flash:
             self.color = self.default_color
         else:
-            self.color = background_col
+            self.color = GREEN
 
     def shuffle_position(self):
         """Shuffle the position of circles"""
@@ -174,20 +174,23 @@ def multi_line_message(text, textsize, pos=((win_width-(win_width/10)), win_heig
     pg.display.flip()
 
 
-def center_message_screen(message, display=win):
+def message_screen(message, display=win):
+    if message == "start":
+        display.fill(background_col)
+        multi_line_message(welcome_text, med_font, ((win_width - (win_width / 10)), 120))
     if message == "4":
         msg_to_screen_centered("Select 4 circles!", BLACK, med_font)
     if message == "NR":
         display.fill(background_col)
         msg_to_screen_centered("Time's up! Now resetting", BLACK, large_font)
         pg.display.flip()
-    if message == "finished":
-        display.fill(background_col)
-        msg_to_screen_centered("Experiment has finished!", BLACK, large_font)
-        pg.display.flip()
     if message == "prac_finished":
         display.fill(background_col)
-        msg_to_screen_centered("Practice trials are over! Press F to continue to move to real trials", BLACK, med_font)
+        multi_line_message(prac_finished_txt, med_font, ((win_width - (win_width / 10)), 120))
+        pg.display.flip()
+    if message == "finished":
+        display.fill(background_col)
+        multi_line_message(experim_fin_txt, large_font, ((win_width - (win_width / 10)), 150))
         pg.display.flip()
 
 
@@ -311,67 +314,6 @@ def record_response(response_time, response_score, time_out_state, log):
     log.write(header_line)
 
 
-def mouse_control(running_state, submit_state, sel4_state, t0, LM, LD, LT):
-
-    selected_targets_list, selected_objects_list = [], []
-    mx, my = pg.mouse.get_pos()
-
-    for event in pg.event.get():
-        if event.type == pg.QUIT:
-            pg.quit()
-            sys.exit()
-        if event.type == pg.KEYDOWN:
-            if event.key == pg.K_ESCAPE:
-                pg.quit()
-                sys.exit()
-            if event.key == pg.K_SPACE:
-                if running_state:
-                    t2 = pg.time.get_ticks()
-                    for target in LT:
-                        if target.isSelected and not target.isClicked:
-                            selected_targets_list.append(target)
-                            selected_objects_list.append(target)
-                    for distractor in LD:
-                        if distractor.isSelected and not distractor.isClicked:
-                            selected_objects_list.append(distractor)
-
-                    if len(selected_objects_list) == num_targ:
-                        submit_state = True
-                        print("Answer submitted")
-                    else:
-                        sel4_state = True
-
-        for obj in LM:
-            if obj.in_circle(mx, my):
-                if event.type == pg.MOUSEMOTION:
-                    if not obj.isClicked and not obj.isSelected:
-                        obj.state_control("hovered")
-                        # print("Clicked state: ", obj.isClicked, "Selected state: ", obj.isSelected)
-                if event.type == pg.MOUSEBUTTONDOWN:
-                    if not obj.isClicked and not obj.isSelected:
-                        obj.state_control("clicked")
-                        # print("Click down; ", "Clicked state: ", obj.isClicked, "Selected state: ",
-                        #       obj.isSelected)
-
-                    if not obj.isClicked and obj.isSelected:
-                        obj.state_control("neutral")
-                        # print("Click down; ", "Clicked state: ", obj.isClicked, "Selected state: ",
-                        #       obj.isSelected)
-                if event.type == pg.MOUSEBUTTONUP:
-                    if obj.isClicked and not obj.isSelected:
-                        obj.state_control("selected")
-                        # print("Mouse released; ""Clicked state: ", obj.isClicked, "Selected state: ",
-                        #       obj.isSelected)
-
-            elif not obj.in_circle(mx, my):
-                if event.type == pg.MOUSEMOTION:
-                    if not obj.isClicked and not obj.isSelected:
-                        obj.state_control("neutral")
-                if event.type == pg.MOUSEBUTTONUP:
-                    if obj.isClicked and not obj.isSelected:
-                        obj.state_control("neutral")
-
-
 def guide_user(master_list, distractor_list, target_list):
 
     timeup = False
@@ -398,7 +340,7 @@ def guide_user(master_list, distractor_list, target_list):
     t0 = pg.time.get_ticks()
 
     while True:
-        pg.time.Clock().tick(FPS)  # =Set FPS
+        pg.time.Clock().tick_busy_loop(FPS)  # =Set FPS
 
         win.fill(background_col)  # =fill background with background color
         mx, my = pg.mouse.get_pos()  # =get x and y coord of mouse cursor on window
@@ -474,7 +416,7 @@ def guide_user(master_list, distractor_list, target_list):
                 animate(distractor_list, target_list, master_list)
             elif Tani - Tfl <= dt < Tans - Tani:
                 if need_to_select_4:
-                    center_message_screen("4")
+                    message_screen("4")
                 guide_screen("answer", master_list, selected_targ)
             elif Tans - Tani < dt:
                 guide_screen("timeup", master_list, selected_targ)
@@ -502,7 +444,7 @@ def practice_trials(master_list, distractor_list, target_list, CPT):
 
     # == Main loop
     while True:
-        pg.time.Clock().tick(FPS)  # =Set FPS
+        pg.time.Clock().tick_busy_loop(FPS)  # =Set FPS
 
         win.fill(background_col)  # =fill background with background color
         mx, my = pg.mouse.get_pos()  # =get x and y coord of mouse cursor on window
@@ -583,7 +525,7 @@ def practice_trials(master_list, distractor_list, target_list, CPT):
                     animate(distractor_list, target_list, master_list)
                 elif Tani < dt <= Tans:  # stop moving the balls
                     if need_to_select_4:
-                        center_message_screen("4")
+                        message_screen("4")
                     static_draw(master_list)
                     pg.display.flip()
                     print(dt)
@@ -599,7 +541,7 @@ def practice_trials(master_list, distractor_list, target_list, CPT):
                 reset = True
 
             if timeup:  # if timed out, run this protocol
-                center_message_screen("NR")
+                message_screen("NR")
                 delay(feedback_time)
                 reset = True
 
@@ -614,7 +556,7 @@ def practice_trials(master_list, distractor_list, target_list, CPT):
                 reset = False
         else:  # if the user completes all the intended trial number
             win.fill(background_col)
-            center_message_screen("prac_finished")
+            message_screen("prac_finished")
             pg.display.flip()
             wait_key()
             break
@@ -633,7 +575,7 @@ def real_trials(master_list, distractor_list, target_list, CRT, recorder):
 
     t0 = pg.time.get_ticks()
     while True:
-        pg.time.Clock().tick(FPS)  # =Set FPS
+        pg.time.Clock().tick_busy_loop(FPS)  # =Set FPS
 
         win.fill(background_col)  # =fill background with background color
         mx, my = pg.mouse.get_pos()  # =get x and y coord of mouse cursor on window
@@ -712,7 +654,7 @@ def real_trials(master_list, distractor_list, target_list, CRT, recorder):
                     animate(distractor_list, target_list, master_list)
                 elif Tani < dt <= Tans:
                     if need_to_select_4:
-                        center_message_screen("4")
+                        message_screen("4")
                     static_draw(master_list)
                     pg.display.flip()
                     print(dt)
@@ -730,7 +672,7 @@ def real_trials(master_list, distractor_list, target_list, CRT, recorder):
 
             if timeup:
                 record_response("timed out", "timed out", True, recorder)
-                center_message_screen("NR")
+                message_screen("NR")
                 delay(feedback_time)
                 reset = True
 
@@ -745,7 +687,7 @@ def real_trials(master_list, distractor_list, target_list, CRT, recorder):
                 reset = False
         else:
             win.fill(background_col)
-            center_message_screen("finished")
+            message_screen("finished")
             pg.display.flip()
             wait_key()
             recorder.close()
@@ -780,14 +722,15 @@ def main():
         pg.init()
 
         # == Start guide ==
-        guide_user(list_m, list_d, list_t)
+        # guide_user(list_m, list_d, list_t)
 
         # == Start practice ==
+        message_screen("start")
+        wait_key()
         practice_trials(list_m, list_d, list_t, completed_practice_trials)
 
         # == Start real trials, recording responses ==
         real_trials(list_m, list_d, list_t, completed_real_trials, log)
-
         pg.quit()
         sys.exit()
 
