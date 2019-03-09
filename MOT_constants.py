@@ -9,6 +9,7 @@ Define the object class attributes
 obj_radius: int = 35  # size of balls in pixels
 num_distractor = 4  # number of distractor objects
 num_targ = 4  # number of target objects
+num_total = num_distractor + num_targ
 
 """
 Define the times and durations in SECONDS
@@ -32,39 +33,41 @@ win_dimension = (win_width, win_height)
 """
 Define instruction texts
 """
-guide_welcome_txt = "Welcome! Firstly, you are welcome to stop at any time; just let the experimenter know!\n" \
-               "In this experiment, you'll first see a cross at the center of the screen. Please always " \
-               "focus your gaze to that cross.\n\nIn this experiment, there will be {:d} moving circles in each trial. " \
-               "Please track {:d} objects indicated by flickering GREEN at the start.\nWhen motion stops, indicate " \
-               "these {:d} objects you have been tracking by clicking on them. Then press the SPACE bar to submit " \
-               "your result.\n\nPress F to move to the guide.".format((int(num_targ+num_distractor)),
-                                                                             num_targ, num_targ)
+start_text = "You will first see a cross at the center of the screen. Please focus your gaze to that cross.\n\n" \
+             "There will be {dist:d} circles appearing on the screen, {targ:d} of them will flash in GREEN.\n" \
+             "The cross will disappear, and all circles will start to move. Keep track of those {targ:d} " \
+             "flashed circles.\n\nWhen the circles stop moving, select which circles you've been tracking by clicking " \
+             "them.\nWhen you have made your selection, press the SPACEBAR to submit your selection.\n\n" \
+             "Press F to start when you are ready.\n\nIf you need to stop, let the experimenter know."\
+    .format(dist=num_distractor, targ=num_targ)
 
-welcome_text = "Welcome! Firstly, you are welcome to stop at any time; just let the experimenter know!\n" \
-               "In this experiment, you'll first see a cross at the center of the screen. Please always " \
-               "focus your gaze to that cross.\n\nIn this experiment, there will be {:d} moving circles in each trial. " \
-               "Please track {:d} objects indicated by flickering GREEN at the start.\nWhen motion stops, indicate " \
-               "these {:d} objects you have been tracking by clicking on them. Then press the SPACE bar to submit " \
-               "your result. Try to be as quick and accurate as your can.\n\nPress F when you " \
-               "are ready to practice.".format((int(num_targ+num_distractor)),
-                                                                             num_targ, num_targ)
+fix_text = "First, you will see this cross. Please focus your gaze here. \nPress F to continue."
 
-fix_text = "First, you will see this cross. Please focus onto the cross and fix your gaze to where the cross is. \n\n" \
-           "Press F to continue."
+present_text = "Then, {total:d} circles will appear randomly around the screen. {targ:d} random " \
+               "circles will flash briefly. Remember which circles flashed. The cross will disappear, and all circles " \
+               "will start moving when the flashing stops.\n\nPress F to continue."\
+    .format(total=num_total, targ=num_targ)
 
-present_text = "Then, {:d} balls will appear randomly. Please focus your gaze to the cross. {:d} random " \
-               "balls will blink briefly. Remember the balls that blinked. All balls will start moving when the " \
-               "blinking stops.\n\nPress F to continue.".format((num_targ+num_distractor), num_targ)
-
-submit_ans_txt = "When the balls stop moving, select the balls that you've been tracking.\nYou will have {:d} seconds " \
-                 "to make your choice.\n\nPress space to submit your answer.".format(int(answer_time-animation_time))
+submit_ans_txt = "When the circles stop moving, select the circles that you've been tracking.\n" \
+                 "You will have {:d} seconds to make your choice.\n\n" \
+                 "Press SPACEBAR to submit your answer.".format(int(answer_time-animation_time))
 
 prac_finished_txt = "The practice is now over.\n\nPress the F when you are ready to continue to the real " \
-                    "experiment.\nKeep track of the {:d} targets and submit your result by pressing the SPACE bar. " \
-                    "\n\nRemember to be as quick and accurate as you can!".format(num_targ)
+                    "experiment.\nRemember to keep track of the {:d} targets and submit your result by " \
+                    "pressing the SPACEBAR.\n\nBe as quick and accurate as you can!\n\n" \
+                    "Press F to continue.".format(num_targ)
 
 experim_fin_txt = "The experiment is now over; let the experimenter know.\n\nThank you for participating!" \
                   "\n\nPress F to exit."
+
+guide_fin_txt = "The guide is now complete, and will move to practice rounds, where you will go through the " \
+                "experiment in normal order, but your answers will not be recorded.\n\nAfter the practice is finished, " \
+                "you will move to the real experiments where your responses will be recorded.\n\n" \
+                "Press F to move to the practice rounds."
+
+guide_submit_txt = "You've selected {:d} targets correctly."
+
+guide_timeup_txt = "Time is up! Once the time is up, the experiment will automatically move on."
 
 # == Font size ==
 large_font = 72
@@ -99,9 +102,8 @@ boundary_location = ['up', 'down', 'left', 'right']
 boundary_coord = [obj_radius, (win_height - obj_radius + 1), obj_radius, (win_width - obj_radius + 1)]
 boundary = dict(zip(boundary_location, boundary_coord))
 
-x_range, y_range = range(int(boundary["left"]), int(boundary["right"])), range(int(boundary["up"]), int(boundary["down"]))
-
-# print(randint(x_range))
+listX, listY = [], []
+rangeX, rangeY = range(boundary['left'], boundary['right']), range(boundary['up'], boundary['down'])
 
 min_spd, max_spd = -2, 2
 
