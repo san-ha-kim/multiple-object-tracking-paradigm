@@ -5,7 +5,7 @@ from messagescreens import  *
 from psychopy.gui import DlgFromDict
 
 # == Trial variables ==
-n_real = 2
+n_real = 50
 n_prac = 2
 
 
