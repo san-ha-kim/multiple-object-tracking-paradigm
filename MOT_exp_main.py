@@ -13,7 +13,7 @@ n_prac = 2
 FPS = 144
 
 
-class MOTobj():
+class MOTobj:
     def __init__(self, default_color=WHITE):
         # -- Radius of the circle objects
         self.radius = obj_radius
@@ -137,12 +137,12 @@ def delay(t):
     pg.time.delay((t*1000))  # multiply by a thousand because the delay function takes milliseconds
 
 
-def record_response(response_score, time_out_state, log):
+def record_response(response_time, response_score, time_out_state, log):
     # record the responses
-    header_list = [response_score, time_out_state]
+    header_list = [response_time, response_score, time_out_state]
     # convert to string
     header_str = map(str, header_list)
-    # convert to a single line, separated by tabs
+    # convert to a single line, separated by commas
     header_line = ','.join(header_str)
     header_line += '\n'
     log.write(header_line)
@@ -373,11 +373,8 @@ def practice_trials(master_list, distractor_list, target_list, CPT):
                     obj.shuffle_position()
                     obj.state_control("neutral")
                 completed_practice_trial_count += 1
-                submitted = False
-                timeup = False
+                submitted = timeup = need_to_select_4 = reset = False
                 t0 = t1
-                need_to_select_4 = False
-                reset = False
         else:  # if the user completes all the intended trial number
             win.fill(background_col)
             message_screen("prac_finished")
@@ -427,7 +424,8 @@ def real_trials(master_list, distractor_list, target_list, CRT, recorder):
 
                         if len(selected_list) == num_targ:
                             submitted = True
-                            print("Answer submitted")
+                            # print("Answer submitted")
+                            t_keypress = pg.time.get_ticks()
                         else:
                             need_to_select_4 = True
 
@@ -472,11 +470,13 @@ def real_trials(master_list, distractor_list, target_list, CRT, recorder):
                         message_screen("not_selected_4")
                     static_draw(master_list)
                     pg.display.flip()
+                    t_stop = pg.time.get_ticks()
                 elif Tans < dt:
                     timeup = True
 
             if submitted:
-                record_response(len(selected_targ), False, recorder)
+                t_sub = ((t_keypress - t0)/1000) - animation_time
+                record_response(t_sub, len(selected_targ), False, recorder)
                 win.fill(background_col)
                 msg_to_screen_centered("{:d} out of {:d} correct".format(len(selected_targ), len(selected_list)), BLACK, large_font)
                 pg.display.flip()
@@ -484,21 +484,23 @@ def real_trials(master_list, distractor_list, target_list, CRT, recorder):
                 reset = True
 
             if timeup:
-                record_response("timed out", True, recorder)
+                record_response("timed out", "timed out", True, recorder)
                 message_screen("timeup")
                 delay(feedback_time)
                 reset = True
 
             if reset:
+                print(completed_practice_trial_count)
                 for obj in master_list:
                     obj.shuffle_position()
                     obj.state_control("neutral")
                 completed_practice_trial_count += 1
-                submitted = False
-                timeup = False
+                submitted = timeup = need_to_select_4 = reset = False
+                # timeup = False
+                # need_to_select_4 = False
+                # reset = False
                 t0 = t1
-                need_to_select_4 = False
-                reset = False
+
         else:
             win.fill(background_col)
             message_screen("exp_finished")
@@ -527,7 +529,7 @@ def main():
         # == Prepare a CSV file ==
         mot_log = date_string + ' pcpnt_' + session_info['Participant'] + '_obsvr_' + session_info['Observer']
         log = open(mot_log + '.csv', 'w')
-        header = ["response_score", "timed_out"]
+        header = ["response_time", "response_score", "timed_out"]
         delim = ",".join(header)
         delim += "\n"
         log.write(delim)
@@ -536,7 +538,7 @@ def main():
         pg.init()
 
         # == Start guide ==
-        guide_user(list_m, list_d, list_t)
+        #guide_user(list_m, list_d, list_t)
 
         # == Start practice ==
 
