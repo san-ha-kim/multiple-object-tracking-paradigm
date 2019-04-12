@@ -1,29 +1,19 @@
 import pygame as pg
-import sys, os, csv
+import sys
 from MOT_constants import *
+from messagescreens import  *
 from psychopy.gui import DlgFromDict
 
 # == Trial variables ==
 n_real = 50
-n_prac = 5
+n_prac = 2
 
-# == Set window ==
-x, y = 50, 50
-os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y)
-win = pg.display.set_mode((win_width, win_height), pg.FULLSCREEN)
-pg.display.set_caption(title)
-
-# == Define colors ==
-background_col = GREY
-hover_col = DARKSLATEGREY
-click_col = GREENYELLOW
-select_col = YELLOW
 
 # == Processing power or frames per second ==
-FPS = 60
+FPS = 144
 
 
-class MOTobj():
+class MOTobj:
     def __init__(self, default_color=WHITE):
         # -- Radius of the circle objects
         self.radius = obj_radius
@@ -54,7 +44,7 @@ class MOTobj():
         self.color = color
 
     def in_circle(self, mouse_x, mouse_y):
-        # -- Return boolean value whether mouse position is in circle or not
+        # -- Return boolean value depending on mouse position, if it is in circle or not
         if math.sqrt(((mouse_x - self.x) ** 2) + ((mouse_y - self.y) ** 2)) < self.radius:
             return True
         else:
@@ -113,7 +103,6 @@ class MOTobj():
             self.flash = not self.flash
 
         self.timer += 3
-        # print("Timer: {:d}".format(self.timer))
 
         if self.flash:
             self.color = self.default_color
@@ -126,120 +115,6 @@ class MOTobj():
                          if n not in range(x - self.radius, x + self.radius)])
         self.y = choice([n for n in range(int(boundary["up"]), int(boundary["down"]))
                          if n not in range(y - self.radius, y + self.radius)])
-
-
-def text_objects(text, color, textsize):
-    """text object defining text"""
-    msg = pg.font.SysFont("arial", textsize)
-    text_surf = msg.render(text, True, color)
-    return text_surf, text_surf.get_rect()  # - Returns the text surface and rect object
-
-
-def msg_to_screen(text, textcolor, textsize, pos, display=win):
-    """function to render message to screen centered"""
-    text_surface, text_rect = text_objects(text, textcolor, textsize)  # - set variable for text rect object
-    text_rect.center = pos
-    display.blit(text_surface, text_rect)
-
-
-def msg_to_screen_centered(text, textcolor, textsize, display=win):
-    """function to render message to screen centered"""
-    text_surface, text_rect = text_objects(text, textcolor, textsize)  # - set variable for text rect object
-    text_rect.center = (win_width/2), (win_height/2)
-    display.blit(text_surface, text_rect)
-
-
-def multi_line_message(text, textsize, pos=((win_width-(win_width/10)), win_height), color=BLACK, display=win):
-    """function to split text message to multiple lines and blit to display window"""
-    # -- Make a list of strings split by the "\n", and each list contains words of that line as elements
-    font = pg.font.SysFont("arial", textsize)
-    words = [word.split(" ") for word in text.splitlines()]
-
-    # -- Get the width required to render an empty space
-    space_w = font.size(" ")[0]  # .size method returns dimension in width and height. [0] gets the width
-    max_w, max_h = ((win_width-(win_width/10)), win_height)
-    text_x, text_y = pos
-
-    for line in words:
-        for word in line:
-            word_surface = font.render(word, True, color)  # get surface for each word
-            word_w, word_h = word_surface.get_size()  # get size for each word
-            if text_x + word_w >= max_w:  # if the a word exceeds the line length limit
-                text_x = (win_width/10)  # reset the x
-                text_y += word_h  # start a new row
-            display.blit(word_surface, (text_x, text_y))  # blit the text onto surface according to pos
-            text_x += word_w + space_w  # force a space between each word
-        text_x = (win_width/10)  # reset the x
-        text_y += word_h  # start a new row
-    pg.display.flip()
-
-
-def message_screen(message, display=win):
-    if message == "start":
-        display.fill(background_col)
-        multi_line_message(welcome_text, med_font, ((win_width - (win_width / 10)), 120))
-    if message == "4":
-        msg_to_screen_centered("Select 4 circles!", BLACK, med_font)
-    if message == "NR":
-        display.fill(background_col)
-        msg_to_screen_centered("Time's up! Now resetting", BLACK, large_font)
-        pg.display.flip()
-    if message == "prac_finished":
-        display.fill(background_col)
-        multi_line_message(prac_finished_txt, med_font, ((win_width - (win_width / 10)), 120))
-        pg.display.flip()
-    if message == "finished":
-        display.fill(background_col)
-        multi_line_message(experim_fin_txt, large_font, ((win_width - (win_width / 10)), 150))
-        pg.display.flip()
-
-
-def guide_screen(call, mlist, selected_targets_list):
-    if call == "welcome":
-        win.fill(background_col)
-        multi_line_message(guide_welcome_txt, med_font, ((win_width - (win_width / 10)), 120))
-        pg.display.flip()
-    if call == "focus":
-        win.fill(background_col)
-        fixation_cross()
-        multi_line_message(fix_text, med_font, ((win_width - (win_width / 10)), (win_height / 2 + 30)))
-        pg.display.flip()
-    if call == "present":
-        win.fill(background_col)
-        fixation_cross()
-        static_draw(mlist)
-        multi_line_message(present_text, med_font, ((win_width - (win_width / 10)), (win_height / 2 + 30)))
-        pg.display.flip()
-    if call == "answer":
-        static_draw(mlist)
-        multi_line_message(submit_ans_txt, med_font, ((win_width - (win_width / 10)), (win_height / 2 + 30)))
-        pg.display.flip()
-    if call == "timeup":
-        static_draw(mlist)
-        multi_line_message("Time is up! For the purpose of this guide, you need to make your selection!", med_font,
-                           ((win_width - (win_width / 10)), (win_height / 2 + 30)))
-        pg.display.flip()
-    if call == "finished":
-        win.fill(background_col)
-        multi_line_message("You've selected {:d} balls correctly.\n\nThe guide is now "
-                           "complete, and will move to practice rounds, where you will go through the experiment "
-                           "in normal order, but your answers will not be recorded.\n\nPress F to move to the "
-                           "practice rounds.".format(len(selected_targets_list)), med_font,
-                           ((win_width - (win_width / 10)), 120))
-        pg.display.flip()
-
-
-def delay(t):
-    """function to stop all processes for a time"""
-    pg.time.delay((t*1000))  # multiply by a thousand because the delay function takes milliseconds
-
-
-def wait_key():
-    """function to wait key press"""
-    while True:
-        for event in pg.event.get():
-            if event.type == pg.KEYDOWN and event.key == pg.K_f:
-                return
 
 
 def generate_list(color):
@@ -257,50 +132,9 @@ def generate_list(color):
     return distractor_list, target_list
 
 
-def flash_targets(dlist, tlist):
-    """function to flash targets"""
-    # pg.time.Clock().tick(FPS)
-    fixation_cross()
-    for d in dlist:
-        for t in tlist:
-            d.draw_circle(win)
-            t.flash_color()
-            t.draw_circle(win)
-    pg.display.update()
-
-
-def animate(dlist, tlist, mlist):
-    """function to move or animate objects on screen"""
-    fixation_cross()
-    for d in dlist:
-        for t in tlist:
-            d.detect_collision(mlist)
-            t.detect_collision(mlist)
-            d.draw_circle(win)
-            t.draw_circle(win)
-    pg.display.update()
-
-
-def static_draw(mlist):
-    """function for static object draw"""
-    for obj in mlist:
-        obj.draw_circle()
-
-
-def fixation_cross(color=BLACK):
-    """function to draw fixation cross"""
-    start_x, end_x = ((win_width/2)-7, (win_height/2)) , ((win_width/2)+7, (win_height/2))
-    start_y, end_y = (win_width/2, (win_height/2)-7), (win_width/2, (win_height/2)+7)
-    pg.draw.line(win, color, start_x, end_x, 3)
-    pg.draw.line(win, color, start_y, end_y, 3)
-
-
-def fixation_screen(mlist):
-    """function to present the fixation cross and the objects"""
-    fixation_cross(BLACK)
-    for obj in mlist:
-        obj.draw_circle()
-    pg.display.update()
+def delay(t):
+    """function to stop all processes for a time"""
+    pg.time.delay((t*1000))  # multiply by a thousand because the delay function takes milliseconds
 
 
 def record_response(response_time, response_score, time_out_state, log):
@@ -308,7 +142,7 @@ def record_response(response_time, response_score, time_out_state, log):
     header_list = [response_time, response_score, time_out_state]
     # convert to string
     header_str = map(str, header_list)
-    # convert to a single line, separated by tabs
+    # convert to a single line, separated by commas
     header_line = ','.join(header_str)
     header_line += '\n'
     log.write(header_line)
@@ -325,15 +159,14 @@ def guide_user(master_list, distractor_list, target_list):
 
     STL = []
     # -- Welcome message --
-    guide_screen("welcome", master_list, STL)
+    guide_screen("start", master_list, STL)
     wait_key()
 
     # -- Fixation cross screen
     guide_screen("focus", master_list, STL)
     wait_key()
-    print("inst pass")
 
-    # -- Present cross and balls screen
+    # -- Present cross and circles screen
     guide_screen("present", master_list, STL)
     wait_key()
 
@@ -345,7 +178,7 @@ def guide_user(master_list, distractor_list, target_list):
         win.fill(background_col)  # =fill background with background color
         mx, my = pg.mouse.get_pos()  # =get x and y coord of mouse cursor on window
 
-        selected_list = []  # - list for all selected objects
+        selected_list = STL = []  # - list for all selected objects
         selected_targ = []  # - list for all SELECTED TARGETS
 
         for event in pg.event.get():
@@ -357,9 +190,7 @@ def guide_user(master_list, distractor_list, target_list):
                     pg.quit()
                     sys.exit()
                 if event.key == pg.K_SPACE:
-                    if guiding:
-                        t2 = pg.time.get_ticks()
-                        tsub = (t2-t0)/1000
+                    if animating:
                         for target in target_list:
                             if target.isSelected and not target.isClicked:
                                 selected_targ.append(target)
@@ -367,10 +198,8 @@ def guide_user(master_list, distractor_list, target_list):
                         for distractor in distractor_list:
                             if distractor.isSelected and not distractor.isClicked:
                                 selected_list.append(distractor)
-
                         if len(selected_list) == num_targ:
                             submitted = True
-                            print("Answer submitted")
                         else:
                             need_to_select_4 = True
 
@@ -379,22 +208,15 @@ def guide_user(master_list, distractor_list, target_list):
                     if event.type == pg.MOUSEMOTION:
                         if not obj.isClicked and not obj.isSelected:
                             obj.state_control("hovered")
-                            # print("Clicked state: ", obj.isClicked, "Selected state: ", obj.isSelected)
                     if event.type == pg.MOUSEBUTTONDOWN:
                         if not obj.isClicked and not obj.isSelected:
                             obj.state_control("clicked")
-                            # print("Click down; ", "Clicked state: ", obj.isClicked, "Selected state: ",
-                            #       obj.isSelected)
 
                         if not obj.isClicked and obj.isSelected:
                             obj.state_control("neutral")
-                            # print("Click down; ", "Clicked state: ", obj.isClicked, "Selected state: ",
-                            #       obj.isSelected)
                     if event.type == pg.MOUSEBUTTONUP:
                         if obj.isClicked and not obj.isSelected:
                             obj.state_control("selected")
-                            # print("Mouse released; ""Clicked state: ", obj.isClicked, "Selected state: ",
-                            #       obj.isSelected)
 
                 elif not obj.in_circle(mx, my):
                     if event.type == pg.MOUSEMOTION:
@@ -412,20 +234,30 @@ def guide_user(master_list, distractor_list, target_list):
                 flash_targets(distractor_list, target_list)
             elif Tfl - Tfix <= dt < Tani - Tfl:
                 for t in target_list:
-                    t.state_control("neutral")
+                    t.state_control("neutral")  # this resets target color to match distractor's
                 animate(distractor_list, target_list, master_list)
             elif Tani - Tfl <= dt < Tans - Tani:
                 if need_to_select_4:
-                    message_screen("4")
+                    message_screen("not_selected_4")
                 guide_screen("answer", master_list, selected_targ)
             elif Tans - Tani < dt:
-                guide_screen("timeup", master_list, selected_targ)
+                # guide_screen("timeup", master_list, selected_targ)
+                timeup = True
+        if timeup:
+            guide_screen("timeup", master_list, STL)
+            delay(feedback_time)
+            guiding = False
         if submitted:
-            guide_screen("finished", master_list, selected_targ)
+            guide_screen("submitted", master_list, STL)
             for obj in master_list:
                 obj.shuffle_position()
                 obj.state_control("neutral")
+            delay(feedback_time)
+            guiding = False
+        if not guiding:
+            guide_screen("finished", master_list, STL)
             wait_key()
+            need_to_select_4 = False
             break
 
 
@@ -476,7 +308,6 @@ def practice_trials(master_list, distractor_list, target_list, CPT):
 
                         if len(selected_list) == num_targ:  # if user selects the same number as there are targets
                             submitted = True  # allow for answer submission
-                            print("Answer submitted")
                         else:  # if user selects more or less than there are targets,
                             need_to_select_4 = True  # remind them to select the same number as there are targets
 
@@ -489,17 +320,11 @@ def practice_trials(master_list, distractor_list, target_list, CPT):
                     if event.type == pg.MOUSEBUTTONDOWN:
                         if not obj.isClicked and not obj.isSelected:
                             obj.state_control("clicked")
-                            # print("Click down; ", "Clicked state: ", obj.isClicked, "Selected state: ",
-                            #       obj.isSelected)
                         if not obj.isClicked and obj.isSelected:
                             obj.state_control("neutral")
-                            # print("Click down; ", "Clicked state: ", obj.isClicked, "Selected state: ",
-                            #       obj.isSelected)
                     if event.type == pg.MOUSEBUTTONUP:
                         if obj.isClicked and not obj.isSelected:
                             obj.state_control("selected")
-                            # print("Mouse released; ""Clicked state: ", obj.isClicked, "Selected state: ",
-                            #       obj.isSelected)
 
                 elif not obj.in_circle(mx, my):
                     if event.type == pg.MOUSEMOTION:
@@ -519,18 +344,16 @@ def practice_trials(master_list, distractor_list, target_list, CPT):
                     fixation_screen(master_list)
                 elif Tfix < dt <= Tfl:  # flash targets
                     flash_targets(distractor_list, target_list)
-                elif Tfl < dt <= Tani:  # animate/move the balls around the screen
+                elif Tfl < dt <= Tani:  # animate/move the circles around the screen
                     for targ in target_list:
                         targ.state_control("neutral")
                     animate(distractor_list, target_list, master_list)
-                elif Tani < dt <= Tans:  # stop moving the balls
+                elif Tani < dt <= Tans:  # stop moving the circles
                     if need_to_select_4:
-                        message_screen("4")
+                        message_screen("not_selected_4")
                     static_draw(master_list)
                     pg.display.flip()
-                    print(dt)
                 elif Tans < dt:  # timed out
-                    print("Timed out")
                     timeup = True
 
             if submitted:  # if user successfully submits answer
@@ -541,7 +364,7 @@ def practice_trials(master_list, distractor_list, target_list, CPT):
                 reset = True
 
             if timeup:  # if timed out, run this protocol
-                message_screen("NR")
+                message_screen("timeup")
                 delay(feedback_time)
                 reset = True
 
@@ -550,10 +373,8 @@ def practice_trials(master_list, distractor_list, target_list, CPT):
                     obj.shuffle_position()
                     obj.state_control("neutral")
                 completed_practice_trial_count += 1
-                submitted = False
-                timeup = False
+                submitted = timeup = need_to_select_4 = reset = False
                 t0 = t1
-                reset = False
         else:  # if the user completes all the intended trial number
             win.fill(background_col)
             message_screen("prac_finished")
@@ -593,8 +414,6 @@ def real_trials(master_list, distractor_list, target_list, CRT, recorder):
                     sys.exit()
                 if event.key == pg.K_SPACE:
                     if not reset:
-                        t2 = pg.time.get_ticks()  # -- time when spacebar is pressed
-                        Tsub = (t2 - t0) / 1000
                         for target in target_list:
                             if target.isSelected and not target.isClicked:
                                 selected_targ.append(target)
@@ -605,7 +424,8 @@ def real_trials(master_list, distractor_list, target_list, CRT, recorder):
 
                         if len(selected_list) == num_targ:
                             submitted = True
-                            print("Answer submitted")
+                            # print("Answer submitted")
+                            t_keypress = pg.time.get_ticks()
                         else:
                             need_to_select_4 = True
 
@@ -614,22 +434,15 @@ def real_trials(master_list, distractor_list, target_list, CRT, recorder):
                     if event.type == pg.MOUSEMOTION:
                         if not obj.isClicked and not obj.isSelected:
                             obj.state_control("hovered")
-                            # print("Clicked state: ", obj.isClicked, "Selected state: ", obj.isSelected)
                     if event.type == pg.MOUSEBUTTONDOWN:
                         if not obj.isClicked and not obj.isSelected:
                             obj.state_control("clicked")
-                            # print("Click down; ", "Clicked state: ", obj.isClicked, "Selected state: ",
-                            #       obj.isSelected)
-
                         if not obj.isClicked and obj.isSelected:
                             obj.state_control("neutral")
-                            # print("Click down; ", "Clicked state: ", obj.isClicked, "Selected state: ",
-                            #       obj.isSelected)
+
                     if event.type == pg.MOUSEBUTTONUP:
                         if obj.isClicked and not obj.isSelected:
                             obj.state_control("selected")
-                            # print("Mouse released; ""Clicked state: ", obj.isClicked, "Selected state: ",
-                            #       obj.isSelected)
 
                 elif not obj.in_circle(mx, my):
                     if event.type == pg.MOUSEMOTION:
@@ -654,16 +467,16 @@ def real_trials(master_list, distractor_list, target_list, CRT, recorder):
                     animate(distractor_list, target_list, master_list)
                 elif Tani < dt <= Tans:
                     if need_to_select_4:
-                        message_screen("4")
+                        message_screen("not_selected_4")
                     static_draw(master_list)
                     pg.display.flip()
-                    print(dt)
+                    t_stop = pg.time.get_ticks()
                 elif Tans < dt:
-                    print("Timed out")
                     timeup = True
 
             if submitted:
-                record_response(Tsub, len(selected_targ), False, recorder)
+                t_sub = ((t_keypress - t0)/1000) - animation_time
+                record_response(t_sub, len(selected_targ), False, recorder)
                 win.fill(background_col)
                 msg_to_screen_centered("{:d} out of {:d} correct".format(len(selected_targ), len(selected_list)), BLACK, large_font)
                 pg.display.flip()
@@ -672,22 +485,25 @@ def real_trials(master_list, distractor_list, target_list, CRT, recorder):
 
             if timeup:
                 record_response("timed out", "timed out", True, recorder)
-                message_screen("NR")
+                message_screen("timeup")
                 delay(feedback_time)
                 reset = True
 
             if reset:
+                print(completed_practice_trial_count)
                 for obj in master_list:
                     obj.shuffle_position()
                     obj.state_control("neutral")
                 completed_practice_trial_count += 1
-                submitted = False
-                timeup = False
+                submitted = timeup = need_to_select_4 = reset = False
+                # timeup = False
+                # need_to_select_4 = False
+                # reset = False
                 t0 = t1
-                reset = False
+
         else:
             win.fill(background_col)
-            message_screen("finished")
+            message_screen("exp_finished")
             pg.display.flip()
             wait_key()
             recorder.close()
@@ -725,8 +541,7 @@ def main():
         guide_user(list_m, list_d, list_t)
 
         # == Start practice ==
-        # message_screen("start")
-        # wait_key()
+
         practice_trials(list_m, list_d, list_t, completed_practice_trials)
 
         # == Start real trials, recording responses ==
