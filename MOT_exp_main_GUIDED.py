@@ -1,6 +1,4 @@
-import pygame as pg
-import sys
-from MOT_constants import *
+import sys, os
 from messagescreens import  *
 from psychopy.gui import DlgFromDict
 
@@ -8,10 +6,11 @@ from psychopy.gui import DlgFromDict
 n_real = 50
 n_prac = 2
 
-
 # == Processing power or frames per second ==
 FPS = 144
 
+# == Directory to save file to ==
+save_directory = "INSERT PATH TO SAVE FILE HERE"
 
 class MOTobj:
     def __init__(self, default_color=WHITE):
@@ -528,7 +527,8 @@ def main():
 
         # == Prepare a CSV file ==
         mot_log = date_string + ' pcpnt_' + session_info['Participant'] + '_obsvr_' + session_info['Observer']
-        log = open(mot_log + '.csv', 'w')
+        save_file = os.path.join(save_directory + "\\" + mot_log + '.csv')
+        log = open(save_file, 'w')
         header = ["response_time", "response_score", "timed_out"]
         delim = ",".join(header)
         delim += "\n"
